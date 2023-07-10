@@ -18,8 +18,8 @@ int main() {
   casacore::ArrayColumn<float> arrCol(tab, "arr");
 
   for (int i = 0; i < tab.nrow(); i++) {
-    std::cout << "RowID: " << idCol.get(i) << " ";
-    std::cout << "RowID: " << arrCol.get(i);
+    std::cout << "ID Col: " << idCol.get(i) << " ";
+    std::cout << "Arr Col: " << arrCol.get(i);
     std::cout << std::endl;
   }
 

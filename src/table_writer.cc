@@ -16,36 +16,58 @@ int main(int argc, char** argv ) {
 
   MPI_Init(&argc, &argv);
 
-  int rank; 
+  int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  casacore::TableDesc td("tableDesc", "1", casacore::TableDesc::Scratch);
+  if (rank == 0) {
+    casacore::TableDesc td("tableDesc", "1", casacore::TableDesc::Scratch);
 
-  td.addColumn(casacore::ScalarColumnDesc<int> ("id"));
-  td.addColumn(casacore::ArrayColumnDesc<float>("arr"));
+    td.addColumn(casacore::ScalarColumnDesc<int> ("id"));
+    td.addColumn(casacore::ArrayColumnDesc<float>("arr"));
 
-  casacore::SetupNewTable newTable("test.data", td, casacore::Table::New);
+    casacore::SetupNewTable newTable("test.data", td, casacore::Table::New);
 
-  casacore::StandardStMan stman;
+    // casacore::StandardStMan stman;
+    // newTable.bindAll(stman);
 
-  newTable.bindAll(stman);
-  // newTable.setShapeColumn("arr", casacore::IPosition(3, 5, 5, 5));
+    const int nrows = 2;
+    casacore::Table tab(newTable, nrows);
 
-  casacore::Table tab(newTable, 10);
+    casacore::ScalarColumn<int> idCol(tab, "id");
+    casacore::ArrayColumn<float> arrCol(tab, "arr");
 
-  casacore::Vector<float> vec(10);
+    casacore::Vector<float> arrColValues(nrows);
 
-  casacore::ScalarColumn<int> idCol(tab, "id");
-  casacore::ArrayColumn<float> arrCol(tab, "arr");
-
-  for (int i = 0; i < 10; i++) {
-    idCol.put(i, rank*i+100);
-    casacore::indgen(vec, float(rank*i+20));
-    arrCol.put(i, vec);
+    for (int i = 0; i < nrows; i++) {
+      idCol.put(i, rank*i+10);
+      casacore::indgen(arrColValues, float(rank*i+20));
+      arrCol.put(i, arrColValues);
+    }
   }
 
-  // casacore::MemoryStMan stman;
-  // casacore::Table tab("test.ms");
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (rank != 0) {
+    casacore::Table tab("test.data",
+      casacore::TableLock::LockOption::UserNoReadLocking,
+      casacore::Table::TableOption::Update
+    );
+
+    casacore::ScalarColumn<int> idCol(tab, "id");
+    casacore::ArrayColumn<float> arrCol(tab, "arr");
+
+    int rowsToAdd = 8;
+    casacore::Vector<float> arrColValues(rowsToAdd);
+    for (size_t i = 0; i < rowsToAdd; i++)
+    {
+      tab.lock();
+      tab.addRow();
+      idCol.put(tab.nrow() - 1, i+100*rank);
+      casacore::indgen(arrColValues, float(i+200*rank));
+      arrCol.put(tab.nrow() - 1, arrColValues);
+      tab.unlock();
+    }
+  }
 
   MPI_Finalize();
 
