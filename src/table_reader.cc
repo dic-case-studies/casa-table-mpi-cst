@@ -10,13 +10,18 @@
 #include <casacore/tables/Tables.h>
 #include <iostream>
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc < 2) {
+    std::cerr << "usage: " << argv[0] << " <table-number>";
+    exit(1);
+  }
 
-  casacore::Table tab("test.data");
+  casacore::Table tab("test_" + std::string(argv[1]) + ".data");
 
   casacore::ScalarColumn<int> idCol(tab, "id");
   casacore::ArrayColumn<float> arrCol(tab, "arr");
 
+  std::cout << "Number of rows: " << tab.nrow() << std::endl;
   for (int i = 0; i < tab.nrow(); i++) {
     std::cout << "ID Col: " << idCol.get(i) << " ";
     std::cout << "Arr Col: " << arrCol.get(i);

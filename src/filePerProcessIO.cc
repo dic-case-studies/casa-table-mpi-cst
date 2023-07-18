@@ -19,55 +19,35 @@ int main(int argc, char** argv ) {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) {
+    int arrColSize = 5;
+//   if (rank != 0) {
+    std::string tableName = "test_" + std::to_string(rank) + ".data";
     casacore::TableDesc td("tableDesc", "1", casacore::TableDesc::Scratch);
 
     td.addColumn(casacore::ScalarColumnDesc<int> ("id"));
     td.addColumn(casacore::ArrayColumnDesc<float>("arr"));
 
-    casacore::SetupNewTable newTable("test.data", td, casacore::Table::New);
+    casacore::SetupNewTable newTable(tableName, td, casacore::Table::New);
 
-    // casacore::StandardStMan stman;
-    // newTable.bindAll(stman);
-
-    const int nrows = 2;
-    casacore::Table tab(newTable, nrows);
+    const int initialRows = 0;
+    casacore::Table tab(newTable, initialRows);
 
     casacore::ScalarColumn<int> idCol(tab, "id");
     casacore::ArrayColumn<float> arrCol(tab, "arr");
 
-    casacore::Vector<float> arrColValues(nrows);
+    casacore::Vector<float> arrColValues(arrColSize);
 
-    for (int i = 0; i < nrows; i++) {
-      idCol.put(i, rank*i+10);
-      casacore::indgen(arrColValues, float(rank*i+20));
-      arrCol.put(i, arrColValues);
-    }
-  }
-
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  if (rank != 0) {
-    casacore::Table tab("test.data",
-      casacore::TableLock::LockOption::UserNoReadLocking,
-      casacore::Table::TableOption::Update
-    );
-
-    casacore::ScalarColumn<int> idCol(tab, "id");
-    casacore::ArrayColumn<float> arrCol(tab, "arr");
-
-    int rowsToAdd = 8;
-    casacore::Vector<float> arrColValues(rowsToAdd);
+    int rowsToAdd = 5;
+    tab.lock();
     for (size_t i = 0; i < rowsToAdd; i++)
     {
-      tab.lock();
       tab.addRow();
       idCol.put(tab.nrow() - 1, i+100*rank);
       casacore::indgen(arrColValues, float(i+200*rank));
       arrCol.put(tab.nrow() - 1, arrColValues);
-      tab.unlock();
     }
-  }
+    tab.unlock();
+//   }
 
   MPI_Finalize();
 
