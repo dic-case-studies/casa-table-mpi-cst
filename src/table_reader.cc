@@ -16,13 +16,21 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  casacore::Table tab("Poldata/table_" + std::string(argv[1]) + ".casatable");
+  std::string tablePath = "out/table_" + std::string(argv[1]) + ".casatable";
+  
+  // Check if the table exists
+  if (casacore::Table::isReadable(tablePath)) {
+      std::cout << "Table exists." << std::endl;
+  } else {
+      std::cout << "Table does not exist." << std::endl;
+      exit(1);
+  }
+
+  casacore::Table tab(tablePath);
 
   casacore::ScalarColumn<casacore::String> nameCol(tab, "name");
   casacore::ArrayColumn<float> dataCol(tab, "data");
-
-
-
+  
   std::cout << "Number of rows: " << tab.nrow() << std::endl;
   for (int i = 0; i < tab.nrow(); i++) {
     std::cout << "Name Col: " << nameCol.get(i) << " ";
