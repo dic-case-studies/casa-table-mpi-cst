@@ -13,7 +13,7 @@ def read_and_print_casa_table(table_path):
     print(column_names)
 
     # Iterate over the table rows
-    for row in tbl:
+    for row in tbl.row():
         # Iterate over the table columns
         for column_name in column_names:
             print(f"{column_name}: {row[column_name]}")

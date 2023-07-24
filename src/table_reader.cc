@@ -16,15 +16,17 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  casacore::Table tab("test_" + std::string(argv[1]) + ".data");
+  casacore::Table tab("Poldata/table_" + std::string(argv[1]) + ".casatable");
 
-  casacore::ScalarColumn<int> idCol(tab, "id");
-  casacore::ArrayColumn<float> arrCol(tab, "arr");
+  casacore::ScalarColumn<casacore::String> nameCol(tab, "name");
+  casacore::ArrayColumn<float> dataCol(tab, "data");
+
+
 
   std::cout << "Number of rows: " << tab.nrow() << std::endl;
   for (int i = 0; i < tab.nrow(); i++) {
-    std::cout << "ID Col: " << idCol.get(i) << " ";
-    std::cout << "Arr Col: " << arrCol.get(i);
+    std::cout << "Name Col: " << nameCol.get(i) << " ";
+    std::cout << "Data Col: " << dataCol.get(i);
     std::cout << std::endl;
   }
 
